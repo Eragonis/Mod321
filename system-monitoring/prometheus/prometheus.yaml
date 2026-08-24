@@ -11,3 +11,7 @@ scrape_configs:
     static_configs:
       - targets:
         - '172.17.0.1:9100'
+  - job_name: 'win_exporter'
+    static_configs:
+      - targets:
+        - '10.5.61.249:9182'
