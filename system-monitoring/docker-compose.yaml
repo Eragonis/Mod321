@@ -10,6 +10,17 @@ services:
     network_mode: host
     restart: always
 
+  loki:
+    image: grafana/loki
+    volumes:
+      - ./loki/loki.yaml:/etc/loki/loki.yaml
+      - loki_data:/loki
+    command:
+      - --config.file=/etc/loki/loki.yaml
+    ports:
+      - 3100:3100
+    restart: always
+
 
   prometheus:
     image: prom/prometheus
@@ -41,3 +52,4 @@ services:
 volumes:
   prometheus_data:
   grafana_data:
+  loki_data:
