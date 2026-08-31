@@ -10,6 +10,21 @@ services:
     network_mode: host
     restart: always
 
+  promtail:
+    image: grafana/promtail
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./promtail/promtail.yaml:/etc/promtail/promtail.yaml
+      - promtail_data:/data
+    command: -config.file=/etc/promtail/promtail.yaml
+    depends_on:
+      - loki
+    ports:
+      - 1514:1514/udp
+    restart: always
+
+
   loki:
     image: grafana/loki
     volumes:
@@ -53,3 +68,4 @@ volumes:
   prometheus_data:
   grafana_data:
   loki_data:
+  promtail_data:
