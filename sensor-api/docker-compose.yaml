@@ -3,11 +3,16 @@ services:
     build: .
     privileged: true # mit vorsicht verwenden
     command: ['python', '-u', 'main.py'] # -u steht für unbuffer
+    devices:
+      - "/dev/snd:/dev/snd"
     volumes:
       - ./air_sensor.py:/usr/src/app/air_sensor.py
       - ./light_sensor.py:/usr/src/app/light_sensor.py
       - ./main.py:/usr/src/app/main.py
       - ./distance_sensor.py:/usr/src/app/distance_sensor.py
+      - ./sound_player.py:/usr/src/app/sound_player.py
+      - ../Mission.mp3:/usr/src/app/Mission.mp3
+      - ./main.py:/usr/src/app/main.py
       - ./index.html:/usr/src/app/index.html
 
     ports:

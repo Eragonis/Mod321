@@ -11,8 +11,48 @@
         <ul>
             <li><a href="/api/light">/api/light</a></li>
             <li><a href="/api/air">/api/air</a></li>
-	    <li><a href="/api/distance">/api/distance</a></li>
+            <li><a href="/api/distance">/api/distance</a></li>
         </ul>
     </p>
+
+    <h2>Sound</h2>
+    <button id="soundBtn" onclick="toggleSound()">▶️ Play</button>
+    <button onclick="restartSound()">⏮️ Restart</button>
+    <br><br>
+    <label for="seekTime">Vorspulen zu (mm:ss):</label>
+    <input type="text" id="seekTime" placeholder="2:15">
+    <button onclick="seekSound()">⏩ Springen</button>
+
+    <script>
+        async function toggleSound() {
+            const res = await fetch("/api/sound/toggle");
+            const data = await res.json();
+            document.getElementById("soundBtn").textContent = data.playing ? "⏸️ Pause" : "▶️ Play";
+        }
+
+        async function restartSound() {
+            await fetch("/api/sound/restart");
+            document.getElementById("soundBtn").textContent = "⏸️ Pause";
+        }
+
+        function parseTimeToSeconds(input) {
+            const parts = input.split(":").map(Number);
+            if (parts.length === 2) {
+                return parts[0] * 60 + parts[1];
+            }
+            return Number(input);
+        }
+
+        async function seekSound() {
+            const input = document.getElementById("seekTime").value;
+            const seconds = parseTimeToSeconds(input);
+            if (isNaN(seconds)) {
+                alert("Bitte im Format mm:ss eingeben, z.B. 2:15");
+                return;
+            }
+            await fetch(`/api/sound/seek?seconds=${seconds}`);
+            document.getElementById("soundBtn").textContent = "⏸️ Pause";
+        }
+    </script>
 </body>
 </html>

@@ -1,8 +1,10 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.parse import urlparse, parse_qs
 from time import sleep
 from air_sensor import AirSensor
 from light_sensor import LightSensor
 from distance_sensor import DistanceSensor
+from sound_player import SoundPlayer
 import mimetypes
 import json
 import os
@@ -13,6 +15,8 @@ air_sensor = AirSensor()
 light_sensor = LightSensor()
 
 distance_sensor = DistanceSensor()
+
+sound_player = SoundPlayer("Mission.mp3")
 
 host = "0.0.0.0"
 port = 8080
@@ -58,6 +62,11 @@ class Server(BaseHTTPRequestHandler):
                 self.wfile.write(file.read())
 
     def do_GET(self):
+        parsed = urlparse(self.path)
+        path = parsed.path
+        query = parse_qs(parsed.query)
+
+
         if self.path == "/":
             self.serveStatic()
 
@@ -74,8 +83,7 @@ class Server(BaseHTTPRequestHandler):
                         },
                         {"label": "Humidity", "value": air.humidity, "unit": "%"},
                     ],
-                }
-            )
+                })
 
         if self.path == "/api/light":
             self.sendJSON(
@@ -100,6 +108,26 @@ class Server(BaseHTTPRequestHandler):
                     },
                 }
             )
+
+
+        if path == "/api/sound/toggle":
+            playing = sound_player.toggle()
+            self.sendJSON({"status": "ok", "playing": playing})
+
+        if path == "/api/sound/restart":
+            playing = sound_player.restart()
+            self.sendJSON({"status": "ok", "playing": playing})
+
+        if path == "/api/sound/seek":
+            seconds = query.get("seconds", ["0"])[0]
+            try:
+                seconds = float(seconds)
+                playing = sound_player.seek(seconds)
+                self.sendJSON({"status": "ok", "playing": playing, "seconds": seconds})
+            except ValueError:
+                self.sendJSON({"status": "error", "message": "invalid seconds"}, code=400)
+
+
 
 
 
