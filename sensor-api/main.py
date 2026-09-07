@@ -2,7 +2,10 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from time import sleep
 from air_sensor import AirSensor
 from light_sensor import LightSensor
+import mimetypes
 import json
+import os
+
 
 air_sensor = AirSensor()
 
@@ -25,11 +28,35 @@ class Server(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(json.dumps(object).encode())
 
+
+
+
+
+    def serveStatic(self):
+        local_file_path = os.path.join(".", self.path[1:], "index.html")
+        print(local_file_path)
+
+        if os.path.exists(local_file_path) and os.path.isfile(local_file_path):
+            self.send_response(200)
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Access-Control-Allow-Methods", "*")
+            self.send_header("Access-Control-Allow-Headers", "*")
+            self.send_header("Vary", "Origin")
+
+            mime_type, _ = mimetypes.guess_type(local_file_path)
+            if mime_type:
+                self.send_header("Content-type", mime_type)
+            else:
+                self.send_header("Content-type", "application/octet-stream")
+
+            self.end_headers()
+
+            with open(local_file_path, "rb") as file:
+                self.wfile.write(file.read())
+
     def do_GET(self):
         if self.path == "/":
-            air = air_sensor.readAir()
-            self.sendJSON({"status": "ok", "air": air.__dict__, "light": light_sensor.readLight()})
-
+            self.serveStatic()
 
         if self.path == "/api/air":
             air = air_sensor.readAir()
@@ -58,6 +85,7 @@ class Server(BaseHTTPRequestHandler):
                     },
                 }
             )
+
 
 
 
