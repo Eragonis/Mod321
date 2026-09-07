@@ -2,6 +2,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from time import sleep
 from air_sensor import AirSensor
 from light_sensor import LightSensor
+from distance_sensor import DistanceSensor
 import mimetypes
 import json
 import os
@@ -10,6 +11,8 @@ import os
 air_sensor = AirSensor()
 
 light_sensor = LightSensor()
+
+distance_sensor = DistanceSensor()
 
 host = "0.0.0.0"
 port = 8080
@@ -82,6 +85,18 @@ class Server(BaseHTTPRequestHandler):
                         "label": "Illuminance",
                         "value": light_sensor.readLight(),
                         "unit": "lux",
+                    },
+                }
+            )
+
+        if self.path == "/api/distance":
+            self.sendJSON(
+                {
+                    "status": "ok",
+                    "data": {
+                        "label": "Distance",
+                        "value": distance_sensor.readDistanceValue(),
+                        "unit": "cm",
                     },
                 }
             )

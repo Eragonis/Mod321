@@ -7,6 +7,7 @@ services:
       - ./air_sensor.py:/usr/src/app/air_sensor.py
       - ./light_sensor.py:/usr/src/app/light_sensor.py
       - ./main.py:/usr/src/app/main.py
+      - ./distance_sensor.py:/usr/src/app/distance_sensor.py
       - ./index.html:/usr/src/app/index.html
 
     ports:
