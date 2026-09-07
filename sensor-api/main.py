@@ -1,9 +1,12 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from time import sleep
 from air_sensor import AirSensor
+from light_sensor import LightSensor
 import json
 
 air_sensor = AirSensor()
+
+light_sensor = LightSensor()
 
 host = "0.0.0.0"
 port = 8080
@@ -25,7 +28,38 @@ class Server(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/":
             air = air_sensor.readAir()
-            self.sendJSON({"status": "ok", "air": air.__dict__})
+            self.sendJSON({"status": "ok", "air": air.__dict__, "light": light_sensor.readLight()})
+
+
+        if self.path == "/api/air":
+            air = air_sensor.readAir()
+            self.sendJSON(
+                {
+                    "status": "ok",
+                    "data": [
+                        {
+                            "label": "Temperature",
+                            "value": air.temperature,
+                            "unit": "°C",
+                        },
+                        {"label": "Humidity", "value": air.humidity, "unit": "%"},
+                    ],
+                }
+            )
+
+        if self.path == "/api/light":
+            self.sendJSON(
+                {
+                    "status": "ok",
+                    "data": {
+                        "label": "Illuminance",
+                        "value": light_sensor.readLight(),
+                        "unit": "lux",
+                    },
+                }
+            )
+
+
 
 
 def main():

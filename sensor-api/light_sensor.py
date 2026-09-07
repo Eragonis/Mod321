@@ -1,57 +1,40 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-# Author: Matt Hawkins
-# Author's Git: https://bitbucket.org/MattHawkinsUK/
-# Author's website: https://www.raspberrypi-spy.co.uk
-import RPi.GPIO as GPIO
 import smbus
 import time
-
-if(GPIO.RPI_REVISION == 1):
-   bus = smbus.SMBus(0)
-else:
-   bus = smbus.SMBus(1)
+import threading
 
 class LightSensor():
+    DEVICE = 0x5c  # Standard I2C Geräteadresse des BH1750
+
+    POWER_DOWN = 0x00
+    POWER_ON = 0x01
+    RESET = 0x07
+    CONTINUOUS_LOW_RES_MODE = 0x13
+    CONTINUOUS_HIGH_RES_MODE_1 = 0x10
+    CONTINUOUS_HIGH_RES_MODE_2 = 0x11
+    ONE_TIME_HIGH_RES_MODE_1 = 0x20
+    ONE_TIME_HIGH_RES_MODE_2 = 0x21
+    ONE_TIME_LOW_RES_MODE = 0x23
+
     def __init__(self):
-	# Definiere Konstante vom Datenblatt
-	self.DEVICE = 0x5c # Standard I2C Geräteadresse
-	self.POWER_DOWN = 0x00 # Kein aktiver zustand
-	self.POWER_ON = 0x01 # Betriebsbereit
-	self.RESET = 0x07 # Reset des Data registers
-	# Starte Messungen ab 4 Lux.
-	self.CONTINUOUS_LOW_RES_MODE = 0x13
-	# Starte Messungen ab 1 Lux.
-	self.CONTINUOUS_HIGH_RES_MODE_1 = 0x10
-	# Starte Messungen ab 0.5 Lux.
-	self.CONTINUOUS_HIGH_RES_MODE_2 = 0x11
-	# Starte Messungen ab 1 Lux.
-	# Nach Messung wird Gerät in einen inaktiven Zustand gesetzt.
-	self.ONE_TIME_HIGH_RES_MODE_1 = 0x20
-	# Starte Messungen ab 0.5 Lux.
-	# Nach Messung wird Gerät in einen inaktiven Zustand gesetzt.
-	self.ONE_TIME_HIGH_RES_MODE_2 = 0x21
-	# Starte Messungen ab 4 Lux.
-	# Nach Messung wird Gerät in einen inaktiven Zustand gesetzt.
-	self.ONE_TIME_LOW_RES_MODE = 0x23
+        self.bus = smbus.SMBus(1)  # Bus 1, aktuelle Raspberry Pi Modelle
+        self.result = self.readLight()
+        threading.Thread(target=self.update, daemon=True).start()
 
-   def convertToNumber(self, data):
-	# Einfache Funktion um 2 Bytes Daten
-	# in eine Dezimalzahl umzuwandeln
-	return ((data[1] + (256 * data[0])) / 1.2)
+    def convertToNumber(self, data):
+        # 2 Bytes Rohdaten in Lux-Wert umwandeln
+        return ((data[1] + (256 * data[0])) / 1.2)
 
-   def readLight(self):
-	data = bus.read_i2c_block_data(self.DEVICE,self.ONE_TIME_HIGH_RES_MODE_1)
-	return self.convertToNumber(data)
+    def readLight(self):
+        data = self.bus.read_i2c_block_data(self.DEVICE, self.ONE_TIME_HIGH_RES_MODE_1)
+        return self.convertToNumber(data)
 
-def main():
-    sensor = LightSensor()
-    try:
-	while True:
-	    print("Light Level : " + str(sensor.readLight()) + " lx")
-	    time.sleep(0.5)
-    except KeyboardInterrupt:
-        pass
+    def update(self):
+        while True:
+            try:
+                self.result = self.readLight()
+            except Exception as e:
+                print(f"Light sensor read error: {e}")
+            time.sleep(0.5)
 
-if __name__ == "__main__":
-   main()
+    def readLightValue(self):
+        return self.result
