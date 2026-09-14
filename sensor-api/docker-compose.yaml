@@ -11,7 +11,7 @@ services:
       - ./main.py:/usr/src/app/main.py
       - ./distance_sensor.py:/usr/src/app/distance_sensor.py
       - ./sound_player.py:/usr/src/app/sound_player.py
-      - ../Mission.mp3:/usr/src/app/Mission.mp3
+      - ../Mission.ogg:/usr/src/app/Mission.ogg
       - ./main.py:/usr/src/app/main.py
       - ./index.html:/usr/src/app/index.html
 
