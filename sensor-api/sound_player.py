@@ -1,13 +1,28 @@
+import os
+os.environ["SDL_AUDIODRIVER"] = "alsa"
+os.environ["AUDIODEV"] = "plughw:2,0"
+
 import pygame
+
+
 
 class SoundPlayer():
     def __init__(self, filepath="song.mp3"):
-        pygame.mixer.init()
         self.filepath = filepath
         self.is_playing = False
         self.loaded = False
+	try:
+            pygame.mixer.init()
+            self.available = True
+        except pygame.error as e:
+            print(f"Sound device not available: {e}")
+            self.available = False
+
+
 
     def toggle(self):
+        if not self.available:
+            return False
         if not self.loaded:
             pygame.mixer.music.load(self.filepath)
             pygame.mixer.music.play()
@@ -22,6 +37,8 @@ class SoundPlayer():
         return self.is_playing
 
     def restart(self):
+        if not self.available:
+            return False
         pygame.mixer.music.load(self.filepath)
         pygame.mixer.music.play()
         self.loaded = True
@@ -29,6 +46,8 @@ class SoundPlayer():
         return self.is_playing
 
     def seek(self, seconds):
+        if not self.available:
+            return False
         if not self.loaded:
             pygame.mixer.music.load(self.filepath)
             self.loaded = True

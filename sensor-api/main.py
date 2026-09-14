@@ -1,3 +1,4 @@
+
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse, parse_qs
 from time import sleep
@@ -8,6 +9,11 @@ from sound_player import SoundPlayer
 import mimetypes
 import json
 import os
+import textwrap
+import RPi.GPIO as GPIO
+import smbus
+
+
 
 
 air_sensor = AirSensor()
@@ -31,10 +37,12 @@ class Server(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Methods", "*")
         self.send_header("Access-Control-Allow-Headers", "*")
         self.send_header("Vary", "Origin")
+        self.send_header("Context-type", "text/plain")
         self.send_header("Content-type", "application/json")
         self.end_headers()
         self.wfile.write(json.dumps(object).encode())
 
+        self.wfile.write(response.encode)
 
 
 
@@ -69,6 +77,15 @@ class Server(BaseHTTPRequestHandler):
 
         if self.path == "/":
             self.serveStatic()
+
+    if self.path == "/matrics":
+        air = air_sensor.readAir()
+        light = light_sensor.readLight()
+        response = textwrap.dedent(f"""
+        # HELP senor_light measured light intensity in lux\n\
+        # TYPE senor_light gazge\n\
+        senor_light {light}
+        """)
 
         if self.path == "/api/air":
             air = air_sensor.readAir()
@@ -127,10 +144,51 @@ class Server(BaseHTTPRequestHandler):
             except ValueError:
                 self.sendJSON({"status": "error", "message": "invalid seconds"}, code=400)
 
+    if path == "/api/sound/status":
+            self.sendJSON({"status": "ok", "playing": sound_player.status()})
 
 
 
+if GPIO.RPI_REVISION == 1:
+    bus = smbus.SMBus(0)
+else:
+    bus = smbus.SMBus(1)
 
+
+class LightSensor:
+    def __init__(self):
+        # Definiere Konstante vom Datenblatt
+
+        self.DEVICE = 0x5C  # Standart I2C Geräteadresse
+
+        self.POWER_DOWN = 0x00  # Kein aktiver zustand
+        self.POWER_ON = 0x01  # Betriebsbereit
+        self.RESET = 0x07  # Reset des Data registers
+
+        # Starte Messungen ab 4 Lux.
+        self.CONTINUOUS_LOW_RES_MODE = 0x13
+        # Starte Messungen ab 1 Lux.
+        self.CONTINUOUS_HIGH_RES_MODE_1 = 0x10
+        # Starte Messungen ab 0.5 Lux.
+        self.CONTINUOUS_HIGH_RES_MODE_2 = 0x11
+        # Starte Messungen ab 1 Lux.
+        # Nach messung wird Gerät in einen inaktiven Zustand gesetzt.
+        self.ONE_TIME_HIGH_RES_MODE_1 = 0x20
+        # Starte Messungen ab 0.5 Lux.
+        # Nach messung wird Gerät in einen inaktiven Zustand gesetzt.
+        self.ONE_TIME_HIGH_RES_MODE_2 = 0x21
+        # Starte Messungen ab 4 Lux.
+        # Nach messung wird Gerät in einen inaktiven Zustand gesetzt.
+        self.ONE_TIME_LOW_RES_MODE = 0x23
+
+    def convertToNumber(self, data):
+        # Einfache Funktion um 2 Bytes Daten
+        # in eine Dezimalzahl umzuwandeln
+        return (data[1] + (256 * data[0])) / 1.2
+
+    def readLight(self):
+        data = bus.read_i2c_block_data(self.DEVICE, self.ONE_TIME_HIGH_RES_MODE_1)
+        return self.convertToNumber(data)
 
 
 def main():

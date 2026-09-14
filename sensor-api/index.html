@@ -53,6 +53,14 @@
             await fetch(`/api/sound/seek?seconds=${seconds}`);
             document.getElementById("soundBtn").textContent = "⏸️ Pause";
         }
+	
+	// Beim Laden der Seite: echten Status abfragen und Button korrekt setzen
+        async function initSoundStatus() {
+            const res = await fetch("/api/sound/status");
+            const data = await res.json();
+            document.getElementById("soundBtn").textContent = data.playing ? "⏸️ Pause" : "▶️ Play";
+        }
+        window.addEventListener("DOMContentLoaded", initSoundStatus);
     </script>
 </body>
 </html>

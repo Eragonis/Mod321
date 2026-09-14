@@ -15,3 +15,9 @@ scrape_configs:
     static_configs:
       - targets:
         - '10.5.61.249:9182'
+
+  - jo_name: 'sensors'
+    scrape_interval: 5s
+    static_contigs:
+      - targets:
+         - 'Eragonis:8080'
