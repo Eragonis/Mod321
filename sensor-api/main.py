@@ -71,21 +71,20 @@ class Server(BaseHTTPRequestHandler):
 
     def do_GET(self):
         parsed = urlparse(self.path)
-        path = parsed.path
         query = parse_qs(parsed.query)
 
 
         if self.path == "/":
             self.serveStatic()
 
-    if self.path == "/matrics":
-        air = air_sensor.readAir()
-        light = light_sensor.readLight()
-        response = textwrap.dedent(f"""
-        # HELP senor_light measured light intensity in lux\n\
-        # TYPE senor_light gazge\n\
-        senor_light {light}
-        """)
+        if self.path == "/metrics":
+            air = air_sensor.readAir()
+            light = light_sensor.readLight()
+            response = textwrap.dedent(f"""
+            # HELP senor_light measured light intensity in lux\n\
+            # TYPE senor_light gazge\n\
+            senor_light {light}
+            """)
 
         if self.path == "/api/air":
             air = air_sensor.readAir()
@@ -127,15 +126,15 @@ class Server(BaseHTTPRequestHandler):
             )
 
 
-        if path == "/api/sound/toggle":
+        if self.path == "/api/sound/toggle":
             playing = sound_player.toggle()
             self.sendJSON({"status": "ok", "playing": playing})
 
-        if path == "/api/sound/restart":
+        if self.path == "/api/sound/restart":
             playing = sound_player.restart()
             self.sendJSON({"status": "ok", "playing": playing})
 
-        if path == "/api/sound/seek":
+        if self.path == "/api/sound/seek":
             seconds = query.get("seconds", ["0"])[0]
             try:
                 seconds = float(seconds)
@@ -144,7 +143,7 @@ class Server(BaseHTTPRequestHandler):
             except ValueError:
                 self.sendJSON({"status": "error", "message": "invalid seconds"}, code=400)
 
-    if path == "/api/sound/status":
+        if self.path == "/api/sound/status":
             self.sendJSON({"status": "ok", "playing": sound_player.status()})
 
 

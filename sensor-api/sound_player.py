@@ -4,21 +4,17 @@ os.environ["AUDIODEV"] = "plughw:2,0"
 
 import pygame
 
-
-
 class SoundPlayer():
     def __init__(self, filepath="song.mp3"):
         self.filepath = filepath
         self.is_playing = False
         self.loaded = False
-	try:
+        try:
             pygame.mixer.init()
             self.available = True
         except pygame.error as e:
             print(f"Sound device not available: {e}")
             self.available = False
-
-
 
     def toggle(self):
         if not self.available:
