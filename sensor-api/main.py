@@ -5,6 +5,7 @@ from air_sensor import AirSensor
 from light_sensor import LightSensor
 from distance_sensor import DistanceSensor
 from sound_player import SoundPlayer
+from touch_sensor import TouchSensor
 import threading
 import mimetypes
 import json
@@ -16,6 +17,7 @@ air_sensor = AirSensor()
 light_sensor = LightSensor()
 distance_sensor = DistanceSensor()
 sound_player = SoundPlayer("Mission.ogg")
+touch_sensor = TouchSensor(11)
 
 host = "0.0.0.0"
 port = 8080
@@ -141,18 +143,33 @@ class Server(BaseHTTPRequestHandler):
 def read_distance_sencor(delay):
     while True:
         distance = distance_sensor.readDistance()
-        mqtt_client.publish("Eragonis/sensors/disatance", distance, qos=2) #qos qualiti of service
+        mqtt_client.publish("Eragonis/sensors/distance", distance, qos=2) #qos qualiti of service
         print(distance)
         sleep(delay)
+
+
+def handle_toch(is_touched):
+    is_touched = not is_touched
+    mqtt_client.publish("Eragonis/sensors/touch", is_touched, qos=2)
+    print("touched")
 
 def main():
     web_server = ThreadingHTTPServer((host, port), Server)
     print(f"Server started and listen to {host}:{port}")
 
-    distanceSebsorThred = threading.Thread(
+    distanceSensorThred = threading.Thread(
         target=read_distance_sencor , args=(0.3,), daemon=True
-)
-    distanceSebsorThred.start()
+
+    )
+
+    # touch_sensor = threading.Thread(
+    #     target=handle_toch , args=(0.3,), daemon=True
+    # )
+
+
+    distanceSensorThred.start()
+
+    touch_sensor.start(handle_toch)
 
     try:
         mqtt_client.loop_start()

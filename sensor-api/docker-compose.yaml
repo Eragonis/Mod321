@@ -1,6 +1,8 @@
 services:
   airsensor:
-    build: .
+    build:
+      context: .
+      dockerfile: lgpio.Dockerfile
     privileged: true # mit vorsicht verwenden
     command: ['python', '-u', 'main.py'] # -u steht für unbuffer
     devices:
