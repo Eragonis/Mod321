@@ -6,6 +6,7 @@ services:
     devices:
       - "/dev/snd:/dev/snd"
     volumes:
+      - .:/usr/src/app/
       - ./air_sensor.py:/usr/src/app/air_sensor.py
       - ./light_sensor.py:/usr/src/app/light_sensor.py
       - ./main.py:/usr/src/app/main.py

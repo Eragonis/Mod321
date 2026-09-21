@@ -5,9 +5,12 @@ from air_sensor import AirSensor
 from light_sensor import LightSensor
 from distance_sensor import DistanceSensor
 from sound_player import SoundPlayer
+import threading
 import mimetypes
 import json
 import os
+
+import paho.mqtt.client as mqtt
 
 air_sensor = AirSensor()
 light_sensor = LightSensor()
@@ -16,6 +19,19 @@ sound_player = SoundPlayer("Mission.ogg")
 
 host = "0.0.0.0"
 port = 8080
+
+
+def on_connect(client, userdata, flags, reason_code, properties):
+    print(f"Connected to MQTT Brocker with result {reason_code}")
+
+def on_message(client, userdata, msg:object):
+    print(msg.topic + " " + str(msg.payload))
+
+mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+mqtt_client.on_connect = on_connect
+mqtt_client.on_message = on_message
+mqtt_client.connect("172.17.0.1",1883 ,60)
+
 
 sleep(1)
 
@@ -122,12 +138,25 @@ class Server(BaseHTTPRequestHandler):
         if path == "/api/sound/status":
             self.sendJSON({"status": "ok", "playing": sound_player.status()})
 
+def read_distance_sencor(delay):
+    while True:
+        distance = distance_sensor.readDistance()
+        mqtt_client.publish("Eragonis/sensors/disatance", distance, qos=2) #qos qualiti of service
+        print(distance)
+        sleep(delay)
 
 def main():
     web_server = ThreadingHTTPServer((host, port), Server)
     print(f"Server started and listen to {host}:{port}")
 
+    distanceSebsorThred = threading.Thread(
+        target=read_distance_sencor , args=(0.3,), daemon=True
+)
+    distanceSebsorThred.start()
+
     try:
+        mqtt_client.loop_start()
+        mqtt_client.publish("Eragonis/up", "true", qos=2)
         web_server.serve_forever()
     except KeyboardInterrupt:
         pass
