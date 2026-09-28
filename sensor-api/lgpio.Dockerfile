@@ -4,6 +4,8 @@ RUN apt-get update
 
 RUN apt install -y swig python3-dev
 
+RUN apt-get update && apt-get install -y libasound2-dev alsa-utils ffmpeg && rm -rf /var/lib/apt/lists/*
+
 RUN pip install setuptools
 
 COPY ./lg.zip .

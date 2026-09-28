@@ -18,7 +18,16 @@ http://eragonis:3000
 http://eragonis:8080
 ```
 
+### WEB
+```
+http://eragonis:80
+```
 
 <span style="color:#b494ea"> - tipp </span>
 sudo docker compose up --build -d
 sudo docker compose up -d
+
+command:
+```bash
+ sudo docker compose logs -f --tail 20
+ ```

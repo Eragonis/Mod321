@@ -3,10 +3,12 @@ services:
     image: prom/node-exporter
     volumes:
       - /:/host:ro  # das erste '/' steht fürs root verzeichnis. von dort holt der container die informationen. der ':' gibt an wo es im container landen sol und am ende welche rechte (lesen schreiben ausführen)
+      - ./node-exporter/node-exporter.yaml:/config.yaml:ro
     command:
       - '--path.procfs=/host/proc'
       - '--path.sysfs=/host/sys'
       - '--collector.wifi'  # gibt an das auch das wifi überwacht werden soll.
+      - '--web.config.file=/config.yaml'
     network_mode: host
     restart: always
 
@@ -42,10 +44,13 @@ services:
     volumes:
       - ./prometheus/:/etc/prometheus/
       - prometheus_data:/prometheus
+      - ./monitoring_user:/monitoring_user:ro
+      - ./monitoring_password:/monitoring_password:ro
     command: [
       '--config.file=/etc/prometheus/prometheus.yaml',
       '--storage.tsdb.path=/prometheus',
       '--storage.tsdb.retention.time=1y',
+      '--web.config.file=/prometheus/web.yaml'
     ]
     ports:
       - '9090:9090'

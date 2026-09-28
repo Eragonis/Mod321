@@ -8,6 +8,9 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
   - job_name: 'node-explorter'
+    basic_auth:
+      username_file: /monitoring_user
+      password_file: /monitoring_password
     static_configs:
       - targets:
         - '172.17.0.1:9100'
@@ -16,8 +19,8 @@ scrape_configs:
       - targets:
         - '10.5.61.249:9182'
 
-  - jo_name: 'sensors'
+  - job_name: 'sensors'
     scrape_interval: 5s
-    static_contigs:
+    static_configs:
       - targets:
          - 'Eragonis:8080'
